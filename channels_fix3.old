@@ -1,0 +1,85 @@
+---- MODULE channels_fix3 ----
+EXTENDS Integers, TLC, Sequences
+
+CONSTANTS NumRoutines, NumTokens
+
+Routines == 1..NumRoutines
+
+(* --algorithm channels_fix3
+
+variables
+  channels = [limitCh |-> 0, found |-> {}];
+  buffered = [limitCh |-> NumTokens];
+  initialized = [w \in Routines |-> FALSE];
+  for_loop_done = FALSE;
+
+
+macro send_buffered(chan) begin
+  await channels[chan] < buffered[chan];
+  channels[chan] := channels[chan] + 1;
+end macro;
+
+macro receive_channel(chan) begin
+  if chan \in DOMAIN buffered then
+    await channels[chan] > 0;
+    channels[chan] := channels[chan] - 1;
+  else
+    await channels[chan] /= {};
+    with w \in channels[chan] do
+      channels[chan] := channels[chan] \ {w}
+    end with;
+  end if;
+end macro;
+
+macro go(routine) begin
+  initialized[routine] := TRUE;
+end macro
+
+procedure send_unbuffered(chan) begin
+  DeclareSend:
+    channels[chan] := channels[chan] \union {self};
+  Send:
+    await self \notin channels[chan];
+    return;
+end procedure
+
+process goroutine \in Routines
+begin
+  A:
+    await initialized[self];
+    call send_unbuffered("found");
+  B:
+    receive_channel("limitCh");
+end process;
+
+process for_loop = -1
+variables i = 1;
+begin
+  ForLoop:
+    while i <= NumRoutines do
+      send_buffered("limitCh");
+      go(i);
+      i := i + 1;
+    end while;
+  ForLoopDone:
+    for_loop_done := TRUE;
+end process;
+
+process main = 0
+variables i = NumRoutines;
+begin
+  Main:
+    await for_loop_done;
+  Get:
+    while i > 0 do
+      receive_channel("found");
+      i := i - 1;
+    end while;
+end process;
+
+end algorithm; *)
+
+\* This fix separates the for loop into its own goroutine
+\* allowing the main process to immediately start reading from found channel
+
+====

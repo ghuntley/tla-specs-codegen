@@ -1,0 +1,71 @@
+---- MODULE channels_simple ----
+EXTENDS Integers, TLC, Sequences
+
+CONSTANTS NumRoutines, NumTokens
+
+Routines == 1..NumRoutines
+
+(* --algorithm channels
+
+variables
+  channels = [limitCh |-> 0, found |-> {}];
+  buffered = [limitCh |-> NumTokens];
+  initialized = [w \in Routines |-> FALSE];
+
+macro send_buffered(chan) begin
+  await channels[chan] < buffered[chan];
+  channels[chan] := channels[chan] + 1;
+end macro;
+
+macro receive_channel(chan) begin
+  if chan \in DOMAIN buffered then
+    await channels[chan] > 0;
+    channels[chan] := channels[chan] - 1;
+  else
+    await channels[chan] /= {};
+    with w \in channels[chan] do
+      channels[chan] := channels[chan] \ {w}
+    end with;
+  end if;
+end macro;
+
+macro go(routine) begin
+  initialized[routine] := TRUE;
+end macro
+
+procedure send_unbuffered(chan) begin
+  DeclareSend:
+    channels[chan] := channels[chan] \union {self};
+  Send:
+    await self \notin channels[chan];
+    return;
+end procedure
+
+process goroutine \in Routines
+begin
+  A:
+    await initialized[self];
+    call send_unbuffered("found");
+  B:
+    receive_channel("limitCh");
+end process;
+
+process main = 0
+variables i = 1;
+begin
+  Main:
+    while i <= NumRoutines do
+      send_buffered("limitCh");
+      go(i);
+      i := i + 1;
+    end while;
+  Get:
+    while i > 1 do
+      i := i - 1;
+      receive_channel("found");
+    end while;
+end process;
+
+end algorithm; *)
+
+====
